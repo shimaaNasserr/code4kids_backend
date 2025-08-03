@@ -1,4 +1,64 @@
-Before installing Python packages, install PostgreSQL dependencies:
+# 🧠 Code4Kids - Backend
 
-sudo apt install postgresql postgresql-contrib libpq-dev
-# code4kids_backend
+A user registration and login system built with **Django REST Framework** and **JWT Authentication**.  
+Users can register as either **"Kid"** or **"Parent"**, and access role-specific endpoints.
+
+---
+
+## 📌 Features
+
+✅ User Registration with:
+- Username  
+- Email  
+- Password + Password Confirmation  
+- Egyptian Phone Number  
+- Role (`Kid` or `Parent`)  
+
+✅ User Login using **email** and **password**
+
+✅ Full **Data Validation** for all fields
+
+✅ **JWT Token Generation** (access & refresh) on login
+
+✅ **Role-Based Access Control**:
+- `Parent`-only view (Parent Dashboard)  
+- `Kid`-only view (Kid Zone)
+
+---
+
+## 🛠️ Tech Stack
+
+- Python 3  
+- Django  
+- Django REST Framework  
+- Simple JWT  
+- PostgreSQL or SQLite
+
+---
+
+## 🚀 Installation Guide
+
+```bash
+# Clone the repository
+git clone https://github.com/USERNAME/REPO_NAME.git
+cd REPO_NAME
+
+# Create and activate a virtual environment
+python -m venv venv
+source venv/bin/activate        # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Apply database migrations
+python manage.py migrate
+| Method | Endpoint             | Description           |
+| ------ | -------------------- | --------------------- |
+| POST   | `/register/`         | Register a new user   |
+| POST   | `/login/`            | Login and get tokens  |
+| GET    | `/parent-only-view/` | Accessible by Parents |
+| GET    | `/kid-only-view/`    | Accessible by Kids    |
+
+
+# Start the development server
+python manage.py runserver
