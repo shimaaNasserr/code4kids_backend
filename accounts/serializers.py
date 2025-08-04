@@ -23,7 +23,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        validated_data.pop('confirm_password')  # نتجاهل تأكيد كلمة السر
+        validated_data.pop('confirm_password')  
         password = validated_data.pop('password')
         user = User(**validated_data)
         user.set_password(password)
@@ -32,18 +32,17 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    username = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        email = data.get('email')
+        username = data.get('username')
         password = data.get('password')
 
-        # مهم: authenticate() بيشتغل بـ username افتراضيًا، عايزة login بـ email؟ لازم backend مخصص
-        user = authenticate(username=email, password=password)
+        user = authenticate(username=username, password=password)
 
         if not user:
-            raise serializers.ValidationError("Invalid email or password")
+            raise serializers.ValidationError("Invalid username or password")
 
         if not user.is_active:
             raise serializers.ValidationError("User is inactive")
