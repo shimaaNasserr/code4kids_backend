@@ -12,6 +12,7 @@ from rest_framework import serializers
 from .models import User, KidParentRelation
 
 
+
 class ChildSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
