@@ -4,7 +4,6 @@ from rest_framework.response import Response
 from .models import User
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import authenticate
 import re
 
 
