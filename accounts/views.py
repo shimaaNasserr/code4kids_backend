@@ -16,14 +16,21 @@ def register(request):
         if field not in data or not data[field].strip():
             return Response({ "error": f"{field} is required." }, status=400)
 
+    if data['role'].lower() == 'admin':
+         return Response({ "error": "You are not allowed to register as an Admin." }, status=403)
+        
+
     if data['password'] != data['confirm_password']:
         return Response({ "error": "Passwords do not match." }, status=400)
 
     if not re.match(r'^(010|011|012|015)\d{8}$', data['phone_number']):
         return Response({ "error": "Invalid Egyptian phone number." }, status=400)
 
-    if data['role'] not in ['Kid', 'Parent']:
-        return Response({ "error": "Role must be either 'Kid' or 'Parent'." }, status=400)
+    if data['role'] not in ['Kid', 'Parent', 'Admin']:
+        return Response({ "error": "Role must be either 'Kid' or 'Parent', or 'Admin'." }, status=400)
+
+
+    
 
     serializer = RegisterSerializer(data=data)
     if serializer.is_valid():
