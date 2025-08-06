@@ -7,6 +7,8 @@
 ![JWT](https://img.shields.io/badge/JWT-Authentication-orange?style=flat-square&logo=jsonwebtokens&logoColor=white)
 ![Cloudinary](https://img.shields.io/badge/Cloudinary-Media-purple?style=flat-square&logo=cloudinary&logoColor=white)
 ![CORS](https://img.shields.io/badge/CORS-Enabled-yellow?style=flat-square)
+A user registration and login system built with **Django REST Framework** and **JWT Authentication**.  
+Users can register as either **"Kid"** or **"Parent"**,**"Admin"** and access role-specific endpoints.
 
 <div align="center">
   <img src="assets/Code4KidsITiLogo.png" alt="Code4Kids Logo" width="100%"/>
@@ -20,7 +22,7 @@ A user registration and learning management system built with Django REST Framew
 - Email  
 - Password + Password Confirmation  
 - Egyptian Phone Number  
-- Role (`Kid` or `Parent`or 'Admin')  
+- Role (`Kid` or `Parent`or `Admin`)  
 
 - User Registration with username, email, password, and Egyptian phone number validation
 - Role-based authentication for Kid, Parent, Admin, and Instructor
