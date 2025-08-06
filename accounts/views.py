@@ -98,3 +98,11 @@ def admin_only_view(request):
         return Response({ "error": "Access denied. Admin role required." }, status=403)
 
     return Response({ "message": f"Welcome Admin {request.user.first_name} to the Admin Panel!" })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_profile(request):
+    user = request.user
+    serializer = UserSerializer(user)
+    return Response(serializer.data)
