@@ -42,6 +42,18 @@ pip install -r requirements.txt
 # Apply database migrations
 python manage.py migrate
 
+| Method | Endpoint             | Description           |
+| ------ | -------------------- | --------------------- |
+| POST   | `/register/`         | Register a new user   |
+| POST   | `/login/`            | Login and get tokens  |
+| GET    | `/parent-only/` | Accessible by Parents |
+| GET    | `/kid-only/`    | Accessible by Kids    |
+| GET    | `/admin-only/`    | Accessible by Admin    |
+| GET    | `/profile/`    | user profile   |
+
+
+
+
 # Start the development server
 python manage.py runserver
 ```
