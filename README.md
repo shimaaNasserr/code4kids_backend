@@ -15,6 +15,12 @@
 ## Features
 
 A user registration and learning management system built with Django REST Framework and JWT Authentication.
+✅ User Registration with:
+- Username  
+- Email  
+- Password + Password Confirmation  
+- Egyptian Phone Number  
+- Role (`Kid` or `Parent`or 'Admin')  
 
 - User Registration with username, email, password, and Egyptian phone number validation
 - Role-based authentication for Kid, Parent, Admin, and Instructor
@@ -26,6 +32,30 @@ A user registration and learning management system built with Django REST Framew
 - Role-based access control for different user types
 
 ## Installation Guide
+
+✅ Full **Data Validation** for all fields
+
+✅ **JWT Token Generation** (access & refresh) on login
+
+✅ **Role-Based Access Control**:
+- `Parent`-only view (Parent Dashboard)  
+- `Kid`-only view (Kid Zone)
+- 'Admin' -only view (Admin Dashboard)
+
+---
+
+## 🛠️ Tech Stack
+
+- Python 3  
+- Django  
+- Django REST Framework  
+- Simple JWT  
+- PostgreSQL or SQLite
+
+---
+
+## 🚀 Installation Guide
+>>>>>>> 95bc0bb (Update README.md)
 
 ```bash
 # Clone the repository
