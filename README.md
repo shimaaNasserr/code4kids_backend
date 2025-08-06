@@ -1,7 +1,7 @@
 # 🧠 Code4Kids - Backend
 
 A user registration and login system built with **Django REST Framework** and **JWT Authentication**.  
-Users can register as either **"Kid"** or **"Parent"**, and access role-specific endpoints.
+Users can register as either **"Kid"** or **"Parent"**,**"Admin"** and access role-specific endpoints.
 
 ---
 
@@ -12,7 +12,7 @@ Users can register as either **"Kid"** or **"Parent"**, and access role-specific
 - Email  
 - Password + Password Confirmation  
 - Egyptian Phone Number  
-- Role (`Kid` or `Parent`or 'Admin')  
+- Role (`Kid` or `Parent`or `Admin`)  
 
 ✅ User Login using **email** and **password**
 
