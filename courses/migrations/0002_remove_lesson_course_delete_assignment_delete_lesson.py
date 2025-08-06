@@ -10,14 +10,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name="lesson",
-            name="course",
-        ),
-        migrations.DeleteModel(
-            name="Assignment",
-        ),
-        migrations.DeleteModel(
-            name="Lesson",
-        ),
+        # migrations.RemoveField(
+        #     model_name="lesson",
+        #     name="course",
+        # ),
+        # migrations.DeleteModel(
+        #     name="Assignment",
+        # ),
+        # migrations.DeleteModel(
+        #     name="Lesson",
+        # ),
     ]
