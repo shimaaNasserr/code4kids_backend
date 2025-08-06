@@ -27,14 +27,11 @@ def register(request):
         return Response({ "error": "Invalid Egyptian phone number." }, status=400)
 
     if data['role'] not in ['Kid', 'Parent', 'Admin']:
-<<<<<<< HEAD
+
         return Response({ "error": "Role must be either 'Kid' or 'Parent', or 'Admin'." }, status=400)
 
 
     
-=======
-        return Response({ "error": "Role must be either 'Kid', 'Parent' or 'Admin'." }, status=400)
->>>>>>> 5fa0b64709397a13d35bac279832eee4ad3d2e1f
 
     serializer = RegisterSerializer(data=data)
     if serializer.is_valid():
