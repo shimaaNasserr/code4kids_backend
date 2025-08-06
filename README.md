@@ -62,6 +62,15 @@ python manage.py migrate
 | GET    | `/admin-only/`    | Accessible by Admin    |
 | GET    | `/profile/`    | user profile   |
 
+#Courses (CRUD Operation)
+| Method | Endpoint             | Description           |
+| ------ | -------------------- | --------------------- |
+| POST   | `/courses/`          | Create a new course   |
+| GET    | `/courses/`          | Get all courses       |
+| GET    | `/courses/id/`       | Get spicific course   |
+| Put    | `/courses/id/`       | Update spicific course|
+| Delete | `/courses/id/`       | Delete spicific course|
+
 
 
 
