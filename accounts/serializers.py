@@ -41,7 +41,7 @@ class LoginSerializer(serializers.Serializer):
 
         User = get_user_model()
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(email=email).first()
         except User.DoesNotExist:
             raise serializers.ValidationError("Invalid email or password")
 
