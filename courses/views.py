@@ -2,8 +2,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Course
-from .serializers import CourseSerializer
+from .models import Course, Category
+from .serializers import CourseSerializer, CategorySerializer
+from django.shortcuts import get_object_or_404
 
 def is_admin(user):
     return user.is_authenticated and getattr(user, 'role', '') == 'Admin'
@@ -31,10 +32,7 @@ def course_list_create(request):
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([AllowAny])
 def course_detail(request, pk):
-    try:
-        course = Course.objects.get(pk=pk)
-    except Course.DoesNotExist:
-        return Response({'detail': 'Course not found.'}, status=status.HTTP_404_NOT_FOUND)
+    course = get_object_or_404(Course, pk=pk)
 
     if request.method == 'GET':
         serializer = CourseSerializer(course)
@@ -58,3 +56,18 @@ def course_detail(request, pk):
 
         course.delete()
         return Response({'detail': 'Course deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+    
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def category_list(request):
+    categories = Category.objects.all()
+    serializer = CategorySerializer(categories, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def category_courses(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    courses = category.courses.all()
+    serializer = CourseSerializer(courses, many=True)
+    return Response(serializer.data)
