@@ -27,14 +27,24 @@ def register(request):
         return Response({ "error": "Invalid Egyptian phone number." }, status=400)
 
     if data['role'] not in ['Kid', 'Parent', 'Admin']:
+<<<<<<< HEAD
         return Response({ "error": "Role must be either 'Kid' or 'Parent', or 'Admin'." }, status=400)
 
 
     
+=======
+        return Response({ "error": "Role must be either 'Kid', 'Parent' or 'Admin'." }, status=400)
+>>>>>>> 5fa0b64709397a13d35bac279832eee4ad3d2e1f
 
     serializer = RegisterSerializer(data=data)
     if serializer.is_valid():
         user = serializer.save()
+
+        if user.role == 'Admin':
+            user.is_staff = True
+            user.is_superuser = True
+            user.save()
+
         return Response({ 
             "message": "User Registered", 
             "user": UserSerializer(user).data 
@@ -82,3 +92,12 @@ def kid_only_view(request):
         return Response({ "error": "Access denied. Kid role required." }, status=403)
 
     return Response({ "message": f"Hello {request.user.first_name}, welcome to the Kid Zone!" })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def admin_only_view(request):
+    if request.user.role != 'Admin':
+        return Response({ "error": "Access denied. Admin role required." }, status=403)
+
+    return Response({ "message": f"Welcome Admin {request.user.first_name} to the Admin Panel!" })
