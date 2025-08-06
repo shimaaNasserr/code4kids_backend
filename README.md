@@ -12,7 +12,7 @@ Users can register as either **"Kid"** or **"Parent"**, and access role-specific
 - Email  
 - Password + Password Confirmation  
 - Egyptian Phone Number  
-- Role (`Kid` or `Parent`)  
+- Role (`Kid` or `Parent`or 'Admin')  
 
 ✅ User Login using **email** and **password**
 
@@ -23,6 +23,7 @@ Users can register as either **"Kid"** or **"Parent"**, and access role-specific
 ✅ **Role-Based Access Control**:
 - `Parent`-only view (Parent Dashboard)  
 - `Kid`-only view (Kid Zone)
+- 'Admin' -only view (Admin Dashboard)
 
 ---
 
