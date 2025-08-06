@@ -16,6 +16,10 @@ def register(request):
         if field not in data or not data[field].strip():
             return Response({ "error": f"{field} is required." }, status=400)
 
+    if data['role'].lower() == 'admin':
+         return Response({ "error": "You are not allowed to register as an Admin." }, status=403)
+        
+
     if data['password'] != data['confirm_password']:
         return Response({ "error": "Passwords do not match." }, status=400)
 
@@ -23,7 +27,11 @@ def register(request):
         return Response({ "error": "Invalid Egyptian phone number." }, status=400)
 
     if data['role'] not in ['Kid', 'Parent', 'Admin']:
-        return Response({ "error": "Role must be either 'Kid', 'Parent' or 'Admin'." }, status=400)
+
+        return Response({ "error": "Role must be either 'Kid' or 'Parent', or 'Admin'." }, status=400)
+
+
+    
 
     serializer = RegisterSerializer(data=data)
     if serializer.is_valid():
@@ -90,3 +98,11 @@ def admin_only_view(request):
         return Response({ "error": "Access denied. Admin role required." }, status=403)
 
     return Response({ "message": f"Welcome Admin {request.user.first_name} to the Admin Panel!" })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_profile(request):
+    user = request.user
+    serializer = UserSerializer(user)
+    return Response(serializer.data)
