@@ -59,6 +59,15 @@ python manage.py migrate
 | GET    | `/parent-only-view/` | Accessible by Parents |
 | GET    | `/kid-only-view/`    | Accessible by Kids    |
 
+#Courses (CRUD Operation)
+| Method | Endpoint             | Description           |
+| ------ | -------------------- | --------------------- |
+| POST   | `/courses/`          | Create a new course   |
+| GET    | `/courses/`          | Get all courses       |
+| GET    | `/courses/id/`       | Get spicific course   |
+| Put    | `/courses/id/`       | Update spicific course|
+| Delete | `/courses/id/`       | Delete spicific course|
+
 
 # Start the development server
 python manage.py runserver
