@@ -7,3 +7,5 @@ urlpatterns = [
     path('categories/', views.category_list, name='category_list'),
     path('categories/<int:pk>/courses/', views.category_courses, name='category_courses'),
 ]
+
+
