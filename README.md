@@ -72,6 +72,14 @@ python manage.py migrate
 | Delete | `/courses/id/`       | Delete spicific course|
 
 
+# Lessons (CRUD Operation)
+| Method | Endpoint | Description |
+| ------ | -------------------- | ------------------------------------- |
+| POST | `/api/lessons/` | Create a new lesson |
+| GET | `/api/lessons/` | Get a list of all lessons |
+| GET | `/api/lessons/<int:pk>/` | Get details for a specific lesson |
+| PUT | `/api/lessons/<int:pk>/` | Update a specific lesson |
+| DELETE | `/api/lessons/<int:pk>/` | Delete a specific lesson |
 
 
 # Start the development server
