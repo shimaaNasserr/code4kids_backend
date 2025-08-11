@@ -8,11 +8,12 @@ Users can register as either **"Kid"** or **"Parent"**,**"Admin"** and access ro
 ## 📌 Features
 
 ✅ User Registration with:
-- Username  
-- Email  
-- Password + Password Confirmation  
-- Egyptian Phone Number  
-- Role (`Kid` or `Parent`or `Admin`)  
+
+- Username
+- Email
+- Password + Password Confirmation
+- Egyptian Phone Number
+- Role (`Kid` or `Parent`)
 
 ✅ User Login using **email** and **password**
 
@@ -21,7 +22,8 @@ Users can register as either **"Kid"** or **"Parent"**,**"Admin"** and access ro
 ✅ **JWT Token Generation** (access & refresh) on login
 
 ✅ **Role-Based Access Control**:
-- `Parent`-only view (Parent Dashboard)  
+
+- `Parent`-only view (Parent Dashboard)
 - `Kid`-only view (Kid Zone)
 - 'Admin' -only view (Admin Dashboard)
 
@@ -29,10 +31,10 @@ Users can register as either **"Kid"** or **"Parent"**,**"Admin"** and access ro
 
 ## 🛠️ Tech Stack
 
-- Python 3  
-- Django  
-- Django REST Framework  
-- Simple JWT  
+- Python 3
+- Django
+- Django REST Framework
+- Simple JWT
 - PostgreSQL or SQLite
 
 ---
@@ -53,6 +55,7 @@ pip install -r requirements.txt
 
 # Apply database migrations
 python manage.py migrate
+
 | Method | Endpoint             | Description           |
 | ------ | -------------------- | --------------------- |
 | POST   | `/register/`         | Register a new user   |
@@ -61,6 +64,7 @@ python manage.py migrate
 | GET    | `/kid-only/`    | Accessible by Kids    |
 | GET    | `/admin-only/`    | Accessible by Admin    |
 | GET    | `/profile/`    | user profile   |
+
 
 #Courses (CRUD Operation)
 | Method | Endpoint             | Description           |
@@ -72,7 +76,23 @@ python manage.py migrate
 | Delete | `/courses/id/`       | Delete spicific course|
 
 
+# Lessons (CRUD Operation)
+| Method | Endpoint | Description |
+| ------ | -------------------- | ------------------------------------- |
+| POST | `/api/lessons/` | Create a new lesson |
+| GET | `/api/lessons/` | Get a list of all lessons |
+| GET | `/api/lessons/<int:pk>/` | Get details for a specific lesson |
+| PUT | `/api/lessons/<int:pk>/` | Update a specific lesson |
+| DELETE | `/api/lessons/<int:pk>/` | Delete a specific lesson |
 
+# Assignments and Submissions
+| Method | Endpoint                              | Description                               |
+| ------ | ------------------------------------- | ----------------------------------------- |
+| GET    | `/lessons/<lesson_id>/assignments/`   | Get all assignments for a specific lesson |
+| POST   | `/submissions/create/`                | Create a new submission                   |
+| PATCH  | `/submissions/<submission_id>/grade/` | Grade a specific submission               |
+| POST   | `/upload/`                            | upload media                              |
 
 # Start the development server
 python manage.py runserver
+```

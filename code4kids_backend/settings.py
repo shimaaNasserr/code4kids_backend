@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import cloudinary
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,6 +31,16 @@ ALLOWED_HOSTS = []
 AUTH_USER_MODEL = 'accounts.User'
 
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+
+cloudinary.config( 
+  cloud_name = "dfgevomxd", 
+  api_key = "346574959959881", 
+  api_secret = "itha-eccTirY5BcybsNx_wh5dPM",
+  secure = True
+)
 
 # Application definition
 
@@ -41,9 +52,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'accounts',
+    'courses',
+    'lessons',
+    'assignments',
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'progress',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 REST_FRAMEWORK = {
