@@ -2,9 +2,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Course, Category
-from .serializers import CourseSerializer, CategorySerializer
+from .models import Course, Category ,Enrollment 
+from .serializers import CourseSerializer, CategorySerializer , EnrollmentSerializer
 from django.shortcuts import get_object_or_404
+from accounts.models import User
+
 
 def is_admin(user):
     return user.is_authenticated and getattr(user, 'role', '') == 'Admin'
@@ -71,3 +73,100 @@ def category_courses(request, pk):
     courses = category.courses.all()
     serializer = CourseSerializer(courses, many=True)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def enroll_in_course(request):
+    course_id = request.data.get('course_id')
+    kid_id = request.data.get('kid_id')  # للأب أو الأدمن لو عايزين يسجلوا طفل معين
+
+    if not course_id:
+        return Response({"error": "course_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    course = get_object_or_404(Course, id=course_id)
+
+    # لو المستخدم طفل → يسجل نفسه
+    if request.user.role == 'Kid':
+        kid = request.user
+
+    # لو المستخدم Parent أو Admin → لازم يبعت kid_id
+    elif request.user.role in ['Parent', 'Admin']:
+        if not kid_id:
+            return Response({"error": "kid_id is required for Parent/Admin"}, status=status.HTTP_400_BAD_REQUEST)
+        kid = get_object_or_404(User, id=kid_id, role='Kid')
+    else:
+        return Response({"error": "Invalid role"}, status=status.HTTP_403_FORBIDDEN)
+
+    # منع التسجيل المكرر
+    if Enrollment.objects.filter(kid=kid, course=course).exists():
+        return Response({"error": "Kid is already enrolled in this course"}, status=status.HTTP_400_BAD_REQUEST)
+
+    Enrollment.objects.create(kid=kid, course=course)
+
+    return Response({"message": f"{kid.username} enrolled in {course.title} successfully!"}, status=status.HTTP_201_CREATED)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_enrollments(request):
+    if request.user.role == 'Kid':
+        # الطفل يشوف كورساته
+        enrollments = Enrollment.objects.filter(kid=request.user)
+        serializer = EnrollmentSerializer(enrollments, many=True)
+        return Response(serializer.data)
+
+    elif request.user.role == 'Parent':
+        # الأب يشوف كورسات أولاده Grouped by Kid
+        kids = request.user.children_relations.select_related('kid')
+        result = []
+
+        for relation in kids:
+            kid = relation.kid
+            enrollments = Enrollment.objects.filter(kid=kid)
+            serializer = EnrollmentSerializer(enrollments, many=True)
+            result.append({
+                "kid_id": kid.id,
+                "kid_name": kid.username,
+                "courses": serializer.data
+            })
+
+        return Response(result)
+
+    else:
+        return Response({"error": "Only Kids or Parents can view enrollments"}, status=403)
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def unenroll_from_course(request):
+    course_id = request.data.get('course_id')
+    kid_id = request.data.get('kid_id')  # للأب أو الأدمن لو عايزين يلغوا لطفل معين
+
+    if not course_id:
+        return Response({"error": "course_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    course = get_object_or_404(Course, id=course_id)
+
+    # لو المستخدم طفل → يلغي لنفسه
+    if request.user.role == 'Kid':
+        kid = request.user
+
+    # لو المستخدم Parent أو Admin → لازم kid_id
+    elif request.user.role in ['Parent', 'Admin']:
+        if not kid_id:
+            return Response({"error": "kid_id is required for Parent/Admin"}, status=status.HTTP_400_BAD_REQUEST)
+        kid = get_object_or_404(User, id=kid_id, role='Kid')
+    else:
+        return Response({"error": "Invalid role"}, status=status.HTTP_403_FORBIDDEN)
+
+    # التأكد إن الطفل مسجل أصلاً
+    enrollment = Enrollment.objects.filter(kid=kid, course=course).first()
+    if not enrollment:
+        return Response({"error": "Kid is not enrolled in this course"}, status=status.HTTP_400_BAD_REQUEST)
+
+    enrollment.delete()
+
+    return Response({"message": f"{kid.username} unenrolled from {course.title} successfully!"}, status=status.HTTP_200_OK)
+
+
