@@ -14,7 +14,7 @@ def is_admin(user):
 def course_list_create(request):
     if request.method == 'GET':
         courses = Course.objects.all()
-        serializer = CourseSerializer(courses, many=True)
+        serializer = CourseSerializer(courses, many=True,context={'request': request})
         return Response(serializer.data)
 
     elif request.method == 'POST':
@@ -35,7 +35,7 @@ def course_detail(request, pk):
     course = get_object_or_404(Course, pk=pk)
 
     if request.method == 'GET':
-        serializer = CourseSerializer(course)
+        serializer = CourseSerializer(course,context={'request': request})
         return Response(serializer.data)
 
     elif request.method == 'PUT':
