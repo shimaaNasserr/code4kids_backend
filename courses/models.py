@@ -18,6 +18,7 @@ class Course(models.Model):
         ('advanced', 'Advanced'),
     ]
     level = models.CharField(max_length=50, choices=LEVEL_CHOICES)
+    image = models.ImageField(upload_to='courses/images/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
 
