@@ -2,6 +2,7 @@ from django.db import models
 from lessons.models import Lesson
 from django.conf import settings  
 
+
 class Assignment(models.Model):
     lesson = models.ForeignKey(Lesson, related_name='assignments', on_delete=models.CASCADE)
     question = models.TextField()

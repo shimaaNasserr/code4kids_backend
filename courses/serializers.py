@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, Category
+from .models import Course, Category ,Enrollment
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -18,3 +18,11 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'level','image', 'created_at', 'created_by', 'categories']
         read_only_fields = ['created_by', 'created_at'] 
 
+class EnrollmentSerializer(serializers.ModelSerializer):
+    course = CourseSerializer()  # Nesed course data
+    kid_name = serializers.CharField(source='kid.username', read_only=True)
+
+
+    class Meta:
+        model = Enrollment
+        fields = ['id', 'course', 'kid_name' ,'enrolled_at']

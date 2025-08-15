@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from .models import Course, Category
+from .models import Course, Category,Enrollment
 
 User = get_user_model()
 
@@ -17,3 +17,4 @@ class CourseAdmin(admin.ModelAdmin):
 
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Category)
+admin.site.register(Enrollment)
