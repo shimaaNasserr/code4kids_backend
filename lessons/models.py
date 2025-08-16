@@ -4,7 +4,8 @@ from courses.models import Course
 class Lesson(models.Model):
     course = models.ForeignKey(Course,related_name='lessons', on_delete=models.CASCADE)  
     title = models.CharField(max_length=200)                      
-    content = models.TextField()                               
+    content = models.TextField()      
+    is_completed = models.BooleanField(default=False)                         
     video_url = models.URLField(blank=True, null=True)            
     order = models.PositiveIntegerField()   
     description = models.TextField(blank=True, null=True) 
