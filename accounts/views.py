@@ -26,12 +26,8 @@ def register(request):
     if not re.match(r'^(010|011|012|015)\d{8}$', data['phone_number']):
         return Response({ "error": "Invalid Egyptian phone number." }, status=400)
 
-    if data['role'] not in ['Kid', 'Parent', 'Admin']:
-
-        return Response({ "error": "Role must be either 'Kid' or 'Parent', or 'Admin'." }, status=400)
-
-
-    
+    if data['role'] not in ['Kid', 'Parent', 'Instructor']:
+        return Response({ "error": "Role must be either 'Kid', 'Parent', or 'Instructor'." }, status=400)
 
     serializer = RegisterSerializer(data=data)
     if serializer.is_valid():
@@ -105,4 +101,40 @@ def admin_only_view(request):
 def get_user_profile(request):
     user = request.user
     serializer = UserSerializer(user)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def instructor_only_view(request):
+    if request.user.role != 'Instructor':
+        return Response({ "error": "Access denied. Instructor role required." }, status=403)
+
+    return Response({ "message": f"Hello Instructor {request.user.first_name}, welcome to the Instructor Dashboard!" })
+
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def update_instructor_profile(request):
+    if request.user.role != 'Instructor':
+        return Response({"error": "Only instructors can update this profile"}, status=403)
+    
+    user = request.user
+    allowed_fields = ['first_name', 'last_name', 'phone_number']
+    
+    for field in allowed_fields:
+        if field in request.data:
+            setattr(user, field, request.data[field])
+    
+    user.save()
+    serializer = UserSerializer(user)
+    return Response({
+        "message": "Profile updated successfully",
+        "user": serializer.data
+    })
+
+
+@api_view(['GET'])
+def list_instructors(request):
+    instructors = User.objects.filter(role='Instructor')
+    serializer = UserSerializer(instructors, many=True)
     return Response(serializer.data)
