@@ -5,5 +5,5 @@ class LessonSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lesson
-        fields = ['id', 'title', 'description', 'order', 'video_url', 'course', 'created_at']
+        fields = ['id', 'title', 'description','content','is_completed', 'order', 'video_url', 'course', 'created_at']
 
