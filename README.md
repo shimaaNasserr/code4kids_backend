@@ -1,45 +1,31 @@
-# 🧠 Code4Kids - Backend
+# Code4Kids - Backend
 
-A user registration and login system built with **Django REST Framework** and **JWT Authentication**.  
-Users can register as either **"Kid"** or **"Parent"**,**"Admin"** and access role-specific endpoints.
+![Python](https://img.shields.io/badge/Python-3.x-blue?style=flat-square&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-5.2.3-green?style=flat-square&logo=django&logoColor=white)
+![DRF](https://img.shields.io/badge/DRF-3.16.0-red?style=flat-square&logo=django&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue?style=flat-square&logo=postgresql&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Authentication-orange?style=flat-square&logo=jsonwebtokens&logoColor=white)
+![Cloudinary](https://img.shields.io/badge/Cloudinary-Media-purple?style=flat-square&logo=cloudinary&logoColor=white)
+![CORS](https://img.shields.io/badge/CORS-Enabled-yellow?style=flat-square)
 
----
+<div align="center">
+  <img src="assets/Code4KidsITiLogo.png" alt="Code4Kids Logo" width="100%"/>
+</div>
 
-## 📌 Features
+## Features
 
-✅ User Registration with:
+A user registration and learning management system built with Django REST Framework and JWT Authentication.
 
-- Username
-- Email
-- Password + Password Confirmation
-- Egyptian Phone Number
-- Role (`Kid` or `Parent`)
+- User Registration with username, email, password, and Egyptian phone number validation
+- Role-based authentication for Kid, Parent, Admin, and Instructor
+- JWT token generation for secure access
+- Course management system with CRUD operations
+- Lesson creation and management with media upload support
+- Assignment submission and grading system
+- Progress tracking for students and parents
+- Role-based access control for different user types
 
-✅ User Login using **email** and **password**
-
-✅ Full **Data Validation** for all fields
-
-✅ **JWT Token Generation** (access & refresh) on login
-
-✅ **Role-Based Access Control**:
-
-- `Parent`-only view (Parent Dashboard)
-- `Kid`-only view (Kid Zone)
-- 'Admin' -only view (Admin Dashboard)
-
----
-
-## 🛠️ Tech Stack
-
-- Python 3
-- Django
-- Django REST Framework
-- Simple JWT
-- PostgreSQL or SQLite
-
----
-
-## 🚀 Installation Guide
+## Installation Guide
 
 ```bash
 # Clone the repository
@@ -56,43 +42,66 @@ pip install -r requirements.txt
 # Apply database migrations
 python manage.py migrate
 
-| Method | Endpoint             | Description           |
-| ------ | -------------------- | --------------------- |
-| POST   | `/register/`         | Register a new user   |
-| POST   | `/login/`            | Login and get tokens  |
-| GET    | `/parent-only/` | Accessible by Parents |
-| GET    | `/kid-only/`    | Accessible by Kids    |
-| GET    | `/admin-only/`    | Accessible by Admin    |
-| GET    | `/profile/`    | user profile   |
+# Start the development server
+python manage.py runserver
+```
 
+## API Endpoints
 
-#Courses (CRUD Operation)
-| Method | Endpoint             | Description           |
-| ------ | -------------------- | --------------------- |
-| POST   | `/courses/`          | Create a new course   |
-| GET    | `/courses/`          | Get all courses       |
-| GET    | `/courses/id/`       | Get spicific course   |
-| Put    | `/courses/id/`       | Update spicific course|
-| Delete | `/courses/id/`       | Delete spicific course|
+### Authentication & User Management
 
-
-# Lessons (CRUD Operation)
 | Method | Endpoint | Description |
-| ------ | -------------------- | ------------------------------------- |
+| ------ | -------- | ----------- |
+| POST | `/api/accounts/register/` | Register a new user |
+| POST | `/api/accounts/login/` | Login and get JWT tokens |
+| GET | `/api/accounts/profile/` | Get user profile |
+| GET | `/api/accounts/parent-only/` | Parent Dashboard |
+| GET | `/api/accounts/kid-only/` | Kid Zone |
+| GET | `/api/accounts/admin-only/` | Admin Panel |
+| GET | `/api/accounts/instructor-only/` | Instructor Dashboard |
+
+### Instructor Management
+
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| GET | `/api/accounts/instructors/` | List all instructors |
+| PUT | `/api/accounts/instructor/profile/` | Update instructor profile |
+
+### Course Management
+
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| POST | `/api/courses/` | Create a new course |
+| GET | `/api/courses/` | Get all courses |
+| GET | `/api/courses/<id>/` | Get specific course |
+| PUT | `/api/courses/<id>/` | Update specific course |
+| DELETE | `/api/courses/<id>/` | Delete specific course |
+| GET | `/api/categories/` | Get all categories |
+| POST | `/api/enroll/` | Enroll in a course |
+| GET | `/api/my-enrollments/` | Get user enrollments |
+
+### Lesson Management
+
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
 | POST | `/api/lessons/` | Create a new lesson |
-| GET | `/api/lessons/` | Get a list of all lessons |
-| GET | `/api/lessons/<int:pk>/` | Get details for a specific lesson |
+| GET | `/api/lessons/` | Get all lessons |
+| GET | `/api/lessons/<int:pk>/` | Get specific lesson details |
 | PUT | `/api/lessons/<int:pk>/` | Update a specific lesson |
 | DELETE | `/api/lessons/<int:pk>/` | Delete a specific lesson |
 
-# Assignments and Submissions
-| Method | Endpoint                              | Description                               |
-| ------ | ------------------------------------- | ----------------------------------------- |
-| GET    | `/lessons/<lesson_id>/assignments/`   | Get all assignments for a specific lesson |
-| POST   | `/submissions/create/`                | Create a new submission                   |
-| PATCH  | `/submissions/<submission_id>/grade/` | Grade a specific submission               |
-| POST   | `/upload/`                            | upload media                              |
+### Assignments & Submissions
 
-# Start the development server
-python manage.py runserver
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| GET | `/lessons/<lesson_id>/assignments/` | Get lesson assignments |
+| POST | `/submissions/create/` | Submit an assignment |
+| PATCH | `/submissions/<submission_id>/grade/` | Grade a submission |
+| POST | `/upload/` | Upload media files |
 
+### Progress Tracking
+
+| Method | Endpoint | Description |
+| ------ | -------- | ----------- |
+| GET | `/progress/parent/` | Get children's progress |
+| GET | `/progress/admin/` | Get all progress data |
