@@ -6,13 +6,12 @@ from django.shortcuts import get_object_or_404
 from .models import Lesson
 from .serializers import LessonSerializer
 import cloudinary.uploader
-# from django.views.decorators.csrf import csrf_exempt
-# from django.http import JsonResponse
-# from django.shortcuts import render
 
-def is_admin_or_instructor(user):
-    """Checks if the user is an Admin or an Instructor"""
-    return user.is_authenticated and user.role in ['Admin', 'Instructor']
+
+def is_admin(user):
+    """Checks if the user is an Admin"""
+    return user.is_authenticated and user.role == 'Admin'
+
 
 @api_view(['GET', 'POST'])
 def lesson_list_create(request):
@@ -27,19 +26,18 @@ def lesson_list_create(request):
         return Response(serializer.data)
     
     elif request.method == 'POST':
-        if not is_admin_or_instructor(request.user):
+        if not is_admin(request.user):
             return Response(
-                {"error": "Only administrators and instructors can create lessons"}, 
+                {"error": "Only administrators can create lessons"}, 
                 status=status.HTTP_403_FORBIDDEN
             )
         
         serializer = LessonSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            lesson = serializer.save()
-            if request.user.role == 'Instructor' and not lesson.instructors.exists():
-                lesson.instructors.add(request.user)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
@@ -51,15 +49,9 @@ def lesson_detail(request, pk):
         return Response(serializer.data)
 
     elif request.method in ['PUT', 'DELETE']:
-        can_modify = (
-            request.user.role == 'Admin' or 
-            (request.user.role == 'Instructor' and 
-             lesson.instructors.filter(id=request.user.id).exists())
-        )
-        
-        if not can_modify:
+        if not is_admin(request.user):
             return Response(
-                {"error": "You do not have permission to modify this lesson"}, 
+                {"error": "Only administrators can modify lessons"}, 
                 status=status.HTTP_403_FORBIDDEN
             )
 
@@ -77,12 +69,13 @@ def lesson_detail(request, pk):
                 status=status.HTTP_204_NO_CONTENT
             )
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def upload_media(request):
-    if not is_admin_or_instructor(request.user):
+    if not is_admin(request.user):
         return Response(
-            {"error": "Only administrators and instructors can upload media"}, 
+            {"error": "Only administrators can upload media"}, 
             status=status.HTTP_403_FORBIDDEN
         )
     
@@ -113,6 +106,7 @@ def upload_media(request):
             {"error": f"Error uploading file: {str(e)}"}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  
