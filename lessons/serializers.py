@@ -1,23 +1,9 @@
 from rest_framework import serializers
 from .models import Lesson
-from accounts.serializers import UserSerializer
-
-class InstructorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserSerializer.Meta.model
-        fields = ['id', 'username', 'first_name', 'last_name', 'bio', 'specialization', 
-                 'years_of_experience', 'profile_image']
 
 class LessonSerializer(serializers.ModelSerializer):
-    instructors = InstructorSerializer(many=True, read_only=True)
-    instructor_ids = serializers.PrimaryKeyRelatedField(
-        many=True, 
-        write_only=True, 
-        queryset=UserSerializer.Meta.model.objects.filter(role='Instructor'),
-        source='instructors'
-    )
     course_title = serializers.CharField(source='course.title', read_only=True)
-    instructors_names = serializers.CharField(source='get_instructors_names', read_only=True)
+    course_instructors = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
@@ -31,12 +17,13 @@ class LessonSerializer(serializers.ModelSerializer):
             'video_url', 
             'course', 
             'course_title',
-            'created_at',
-            'instructors',
-            'instructor_ids',
-            'instructors_names'
+            'course_instructors',
+            'created_at'
         ]
         read_only_fields = ['created_at']
+
+    def get_course_instructors(self, obj):
+        return obj.course.get_instructors_names() if obj.course else ""
 
     def validate_order(self, value):
         course = self.initial_data.get('course')

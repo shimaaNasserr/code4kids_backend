@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role', 'phone_number']
+        fields = ['id', 'username', 'email', 'role', 'phone_number', 'first_name', 'last_name']
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -15,7 +15,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'confirm_password', 'phone_number', 'role']
+        fields = ['username', 'email', 'password', 'confirm_password', 'role', 'first_name', 'last_name']
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
@@ -53,3 +53,4 @@ class LoginSerializer(serializers.Serializer):
 
         data['user'] = user
         return data
+    

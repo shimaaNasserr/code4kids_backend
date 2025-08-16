@@ -9,6 +9,18 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Instructor(models.Model):
+    name = models.CharField(max_length=200)
+    bio = models.TextField(blank=True, null=True, help_text="A brief bio about the instructor")
+    specialization = models.CharField(max_length=200, blank=True, null=True, help_text="Specialization")
+    years_of_experience = models.PositiveIntegerField(default=0, help_text="Years of experience")
+    profile_image = models.ImageField(upload_to='instructors/', blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+        
+    def __str__(self):
+        return self.name
+
 
 class Course(models.Model):
     title = models.CharField(max_length=200)
@@ -22,8 +34,8 @@ class Course(models.Model):
     image = models.ImageField(upload_to='courses/images/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
-
     categories = models.ManyToManyField(Category, related_name='courses')
+    instructors = models.ManyToManyField(Instructor, related_name='courses', blank=True, help_text="Instructors responsible for this course")
 
     def __str__(self):
         return self.title
