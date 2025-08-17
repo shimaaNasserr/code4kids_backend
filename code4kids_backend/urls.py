@@ -10,6 +10,7 @@ urlpatterns = [
     path('api/accounts/', include('accounts.urls')),
     path('api/', include('courses.urls')),
     path('api/', include('lessons.urls')),
+    path('api/', include('ratings.urls')),
     path('progress/', include('progress.urls')),
     path("lessons/<int:lesson_id>/assignments/", AssignmentsByLessonListAPIView.as_view(), name="assignments-by-lesson"),
     path("submissions/create/", SubmissionCreateAPIView.as_view(), name="submission-create"),

@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'accounts',
     'courses',
     'lessons',
+    'ratings',
     'assignments',
     'rest_framework',
     'rest_framework_simplejwt',
