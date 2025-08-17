@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from cloudinary.models import CloudinaryField
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 class Category(models.Model):
@@ -21,7 +22,7 @@ class Instructor(models.Model):
         help_text="Years of experience",
         validators=[MinValueValidator(0), MaxValueValidator(50)]
     )
-    profile_image = models.ImageField(upload_to='instructors/', blank=True, null=True)
+    profile_image = CloudinaryField("image", blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -41,7 +42,7 @@ class Course(models.Model):
         ('advanced', 'Advanced'),
     ]
     level = models.CharField(max_length=50, choices=LEVEL_CHOICES)
-    image = models.ImageField(upload_to='courses/images/', blank=True, null=True)
+    image = CloudinaryField("image", blank=True, null=True)
     is_active = models.BooleanField(default=True)
     max_students = models.PositiveIntegerField(default=50)
     created_at = models.DateTimeField(auto_now_add=True)
