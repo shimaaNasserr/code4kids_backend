@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 from .models import Lesson
 from .serializers import LessonSerializer
 import cloudinary.uploader
+from .models import LessonCompletion
 
 
 def is_admin(user):
@@ -123,4 +124,35 @@ def mark_lesson_complete(request, lesson_id):
     return Response({
         "message": f"Lesson completion recorded for: {lesson.title}",
         "lesson_id": lesson.id
+    })
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mark_lesson_complete(request, lesson_id):
+    """تسجيل إكمال درس للطالب - محدث ليشتغل مع نظام التقدم الجديد"""
+    if request.user.role != 'Kid':
+        return Response(
+            {"error": "Only children can mark lessons as complete"}, 
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    
+    completion, created = LessonCompletion.objects.get_or_create(
+        student=request.user,
+        lesson=lesson,
+        defaults={'time_spent_minutes': request.data.get('time_spent', 0)}
+    )
+    
+    if not created:
+        return Response({
+            "message": "Lesson already completed",
+            "lesson_id": lesson.id,
+            "completed_at": completion.completed_at
+        })
+    
+    return Response({
+        "message": f"Lesson completion recorded for: {lesson.title}",
+        "lesson_id": lesson.id,
+        "completed_at": completion.completed_at
     })
