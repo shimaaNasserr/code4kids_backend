@@ -44,6 +44,8 @@ class Course(models.Model):
     level = models.CharField(max_length=50, choices=LEVEL_CHOICES)
     image = CloudinaryField("image", blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    total_lessons = models.IntegerField(default=0)
+    total_assignments = models.IntegerField(default=0)
     max_students = models.PositiveIntegerField(default=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -96,11 +98,13 @@ class Enrollment(models.Model):
 
     def __str__(self):
         return f"{self.kid.username} enrolled in {self.course.title}"
+    
 
-    def calculate_progress(self):
-        total_lessons = self.course.get_total_lessons()
-        if total_lessons == 0:
-            return 0.0
+
+    # def calculate_progress(self):
+    #     total_lessons = self.course.get_total_lessons()
+    #     if total_lessons == 0:
+    #         return 0.0
         
         # completed_lessons = LessonCompletion.objects.filter(
         #     student=self.kid, 
@@ -108,4 +112,4 @@ class Enrollment(models.Model):
         # ).count()
         
         # return (completed_lessons / total_lessons) * 100
-        return 0.0
+        # return 0.0

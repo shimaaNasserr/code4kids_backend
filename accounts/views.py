@@ -97,3 +97,13 @@ def get_user_profile(request):
     user = request.user
     serializer = UserSerializer(user)
     return Response(serializer.data)
+
+
+from rest_framework_simplejwt.tokens import RefreshToken
+
+def generate_jwt_token(user):
+    refresh = RefreshToken.for_user(user)
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
