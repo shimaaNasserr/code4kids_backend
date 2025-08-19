@@ -5,6 +5,9 @@ from .models import User
 from .serializers import UserSerializer, RegisterSerializer, LoginSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 import re
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.shortcuts import redirect
+
 
 
 @api_view(['POST'])
@@ -99,7 +102,6 @@ def get_user_profile(request):
     return Response(serializer.data)
 
 
-from rest_framework_simplejwt.tokens import RefreshToken
 
 def generate_jwt_token(user):
     refresh = RefreshToken.for_user(user)
@@ -107,3 +109,18 @@ def generate_jwt_token(user):
         'refresh': str(refresh),
         'access': str(refresh.access_token),
     }
+
+def google_login_redirect(request):
+    user = request.user  # ده بيكون المستخدم اللي اتسجل بجوجل
+    
+    if not user.is_authenticated:
+        return redirect("http://localhost:5173/")  # لو فشل الدخول
+
+    # نولّد JWT tokens
+    refresh = RefreshToken.for_user(user)
+    access = str(refresh.access_token)
+
+    # نجهز redirect على الـ frontend مع التوكنز
+    frontend_url = f"http://localhost:5173/?access={access}&refresh={str(refresh)}"
+    return redirect(frontend_url)
+
