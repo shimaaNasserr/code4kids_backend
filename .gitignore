@@ -28,4 +28,4 @@ staticfiles/
 media/
 
 # Logs
-*.log
+*.logcode4kids_backend/settings.py
