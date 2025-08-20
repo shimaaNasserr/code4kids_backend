@@ -8,14 +8,23 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description']
 
 class InstructorSerializer(serializers.ModelSerializer):
+    profile_image = serializers.SerializerMethodField()
+    
     class Meta:
         model = Instructor
         fields = ['id', 'name', 'bio', 'specialization', 'years_of_experience', 
                  'profile_image', 'email']
+        
+    def get_profile_image(self, obj):
+        try:
+            return obj.profile_image.url if obj.profile_image else None
+        except Exception:
+            return None
 
 
 class CourseSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True) 
+    image_url = serializers.SerializerMethodField()
     instructors = InstructorSerializer(many=True, read_only=True)
     instructor_ids = serializers.PrimaryKeyRelatedField(
         many=True, 
@@ -31,14 +40,16 @@ class CourseSerializer(serializers.ModelSerializer):
         source='categories',
         required=False
     )
-    image = serializers.ImageField(use_url=True, required=False)
     instructors_names = serializers.CharField(source='get_instructors_names', read_only=True)
     
     class Meta:
         model = Course
-        fields = ['id', 'title', 'description', 'level', 'image', 'created_at', 'created_by', 
+        fields = ['id', 'title', 'description', 'level', 'image_url', 'created_at', 'created_by', 
                  'categories', 'category_ids', 'instructors', 'instructor_ids', 'instructors_names']
         read_only_fields = ['created_by', 'created_at'] 
+
+    def get_image_url(self, obj):
+        return obj.image.url if obj.image else None
 
 
 class EnrollmentSerializer(serializers.ModelSerializer):

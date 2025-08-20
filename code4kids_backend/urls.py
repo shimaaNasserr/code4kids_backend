@@ -3,7 +3,6 @@ from django.urls import path , include
 from lessons.views import upload_media
 from django.conf import settings
 from django.conf.urls.static import static
-from assignments.views import AssignmentsByLessonListAPIView, SubmissionCreateAPIView, SubmissionGradeAPIView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -12,10 +11,10 @@ urlpatterns = [
     path('api/', include('lessons.urls')),
     path('api/', include('ratings.urls')),
     path('progress/', include('progress.urls')),
-    path("lessons/<int:lesson_id>/assignments/", AssignmentsByLessonListAPIView.as_view(), name="assignments-by-lesson"),
-    path("submissions/create/", SubmissionCreateAPIView.as_view(), name="submission-create"),
-    path("submissions/<int:submission_id>/grade/", SubmissionGradeAPIView.as_view(), name="submission-grade"),
     path('upload/', upload_media, name='upload_media'),
+    path('dj-rest-auth/', include('dj_rest_auth.urls')),
+    path('dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
+    path('accounts/', include('allauth.urls')), 
 ]
 
 if settings.DEBUG:

@@ -1,48 +1,50 @@
 from django.contrib import admin
 from .models import Progress
-from accounts.models import User  
 
 @admin.register(Progress)
 class ProgressAdmin(admin.ModelAdmin):
     list_display = (
-        'kid', 'course', 'completed_lessons', 'completed_assignments', 
-        'total_lessons_display', 'total_assignments_display', 
-        'progress_percentage_display', 'last_updated'
+        "kid",
+        "course",
+        "total_lessons",
+        "completed_lessons_count",
+        "total_assignments",
+        "completed_assignments_count",
+        "progress_percentage",
+        "last_updated",
     )
-    list_filter = ('course', 'last_updated', 'date')
-    search_fields = ('kid__username', 'course__title', 'parent__username')
-    readonly_fields = ('progress_percentage_display', 'total_lessons_display', 'total_assignments_display')
-    
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "parent":
-            kwargs["queryset"] = User.objects.filter(role='Parent')
-        if db_field.name == "kid":
-            kwargs["queryset"] = User.objects.filter(role='Kid')
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    search_fields = ("kid__username", "course__title")
+    list_filter = ("course", "last_updated", "created_at")  # عدلنا "date" → "created_at"
 
-    def total_lessons_display(self, obj):
-        return obj.total_lessons
-    total_lessons_display.short_description = 'Total Lessons'
+    # عدد كل الدروس في الكورس
+    def total_lessons(self, obj):
+        return getattr(obj.course, "total_lessons", 0)
+    total_lessons.short_description = "Total Lessons"
 
-    def total_assignments_display(self, obj):
-        return obj.total_assignments
-    total_assignments_display.short_description = 'Total Assignments'
+    # عدد الدروس اللي خلصها
+    def completed_lessons_count(self, obj):
+        return obj.completed_lessons  # مباشرة IntegerField
+    completed_lessons_count.short_description = "Completed Lessons"
 
-    def progress_percentage_display(self, obj):
-        return f"{obj.progress_percentage}%"
-    progress_percentage_display.short_description = 'Progress %'
-    
-    actions = ['refresh_selected_progress']
-    
-    def refresh_selected_progress(self, request, queryset):
-        updated_count = 0
-        for progress in queryset:
-            progress.update_progress()
-            updated_count += 1
-        
-        self.message_user(
-            request, 
-            f"Successfully updated {updated_count} progress records."
-        )
-    
-    refresh_selected_progress.short_description = "Automatically update selected progress"
+    # عدد كل الأسايمنت في الكورس
+    def total_assignments(self, obj):
+        return getattr(obj.course, "total_assignments", 0)
+    total_assignments.short_description = "Total Assignments"
+
+    # عدد الأسايمنت اللي خلصها
+    def completed_assignments_count(self, obj):
+        return obj.completed_assignments  # مباشرة IntegerField
+    completed_assignments_count.short_description = "Completed Assignments"
+
+    # نسبة التقدم
+    def progress_percentage(self, obj):
+        total_lessons = getattr(obj.course, "total_lessons", 0)
+        total_assignments = getattr(obj.course, "total_assignments", 0)
+        total_items = total_lessons + total_assignments
+
+        completed_items = obj.completed_lessons + obj.completed_assignments
+
+        if total_items == 0:
+            return "0%"
+        return f"{(completed_items / total_items) * 100:.2f}%"
+    progress_percentage.short_description = "Progress %"
