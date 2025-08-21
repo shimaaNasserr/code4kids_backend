@@ -5,6 +5,7 @@ from courses.models import Enrollment, Course
 from progress.models import Progress
 from lessons.models import LessonCompletion
 from django.contrib.auth import get_user_model
+import re
 
 
 
@@ -26,6 +27,12 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data['password'] != data['confirm_password']:
             raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
+
+        pattern = r'^[A-Za-z0-9@#$%^&*]{6,11}$'
+        if not re.match(pattern, data['password']):
+            raise serializers.ValidationError(
+                {"password": "Password must be 6–11 characters long, and may include @#$%^&* only."}
+            )
         return data
 
     def create(self, validated_data):
