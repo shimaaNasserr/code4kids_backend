@@ -6,7 +6,8 @@ from progress.models import Progress
 from lessons.models import LessonCompletion
 from django.contrib.auth import get_user_model
 import re
-
+from rest_framework import serializers
+from .models import User  # Custom user model
 
 
 
@@ -265,3 +266,8 @@ class ComprehensiveProfileSerializer(serializers.ModelSerializer):
             relations = KidParentRelation.objects.filter(parent=obj)
             return KidSummarySerializer(relations, many=True).data
         return []
+
+
+
+
+

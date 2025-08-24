@@ -12,6 +12,8 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Avg, Count
 from rest_framework import status
 import re
+from django.shortcuts import redirect
+from django.conf import settings
 
 
 @api_view(['POST'])
@@ -352,3 +354,24 @@ def achievements(request):
         })
     
     return Response(achievements_data, status=status.HTTP_200_OK)
+
+
+
+def google_login_redirect(request):
+    user = request.user
+    if not user.is_authenticated:
+        return redirect(f"{settings.FRONTEND_URL}/login?error=not_authenticated")
+
+    refresh = RefreshToken.for_user(user)
+    access = str(refresh.access_token)
+
+    # نضيف الـ tokens للـ redirect URL
+    frontend_url = f"{settings.FRONTEND_URL}/auth/callback?access={access}&refresh={str(refresh)}&id={user.id}"
+    return redirect(frontend_url)
+
+
+
+
+
+
+

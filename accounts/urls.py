@@ -10,7 +10,7 @@ urlpatterns = [
     # Authentication
     path('register/', register, name='register'),
     path('login/', loginUser, name='login'),
-    
+
     # Role-based views
     path('parent-only/', parent_only_view, name='parent_only'),
     path('kid-only/', kid_only_view, name='kid_only'),
