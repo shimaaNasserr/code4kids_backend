@@ -4,7 +4,7 @@ from courses.serializers import CourseSerializer
 def route_intent(message, user, child=None):
     msg = message.lower()
 
-    if "عدد الكورسات" in msg or "الكورسات المتاحة" in msg or "انا مسجل في ايه" in msg:
+    if "عدد الكورسات" in msg or "الكورسات المتاحة" in msg or "انا مسجل في ايه" in msg or"الكورسات المتاحه" in msg:
         courses = Course.objects.all()
         courses_ser = CourseSerializer(courses, many=True).data
 
