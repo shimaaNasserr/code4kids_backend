@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'lessons',
     'ratings',
     'assignments',
+    'games',
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
