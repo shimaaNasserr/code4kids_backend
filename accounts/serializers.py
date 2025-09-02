@@ -7,9 +7,41 @@ from lessons.models import LessonCompletion
 from django.contrib.auth import get_user_model
 import re
 from rest_framework import serializers
-from .models import User  # Custom user model
+from .models import User, KidParentRelation
 
 
+class ChildSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "first_name", "last_name", "child_code"]
+
+
+class LinkChildSerializer(serializers.Serializer):
+    child_code = serializers.CharField()
+
+    def validate(self, data):
+        request = self.context['request']
+        parent = request.user
+        if parent.role != "Parent":
+            raise serializers.ValidationError("Only parents can link children.")
+
+        try:
+            child = User.objects.get(child_code=data['child_code'], role="Kid")
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Invalid child code.")
+
+        if KidParentRelation.objects.filter(kid=child).exists():
+            raise serializers.ValidationError("This child is already linked to a parent.")
+
+        data['child'] = child
+        data['parent'] = parent
+        return data
+
+    def create(self, validated_data):
+        return KidParentRelation.objects.create(
+            parent=validated_data['parent'],
+            kid=validated_data['child']
+        )
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

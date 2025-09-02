@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
+import uuid
 
 
 class User(AbstractUser):
@@ -16,6 +17,8 @@ class User(AbstractUser):
     phone_number = models.CharField(max_length=20, blank=True, null=True)  
     first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
+    child_code = models.CharField(max_length=10, unique=True, blank=True, null=True)
+
 
     USERNAME_FIELD = 'email'     
     REQUIRED_FIELDS = ['username']
@@ -23,6 +26,10 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.username} ({self.role})"
 
+    def save(self, *args, **kwargs):
+        if self.role == "Kid" and not self.child_code:
+            self.child_code = str(uuid.uuid4().hex)[:8]  
+        super().save(*args, **kwargs)
 
 class KidParentRelation(models.Model):
     parent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, 

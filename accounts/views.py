@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import User, UserProfile, KidParentRelation
-from .serializers import UserSerializer, RegisterSerializer, LoginSerializer
+from .serializers import UserSerializer, RegisterSerializer, LoginSerializer, LinkChildSerializer, ChildSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserProfileSerializer
 from courses.models import Enrollment, Course
@@ -10,11 +10,26 @@ from progress.models import Progress
 from lessons.models import LessonCompletion
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg, Count
-from rest_framework import status
+from rest_framework import status, generics, permissions
 import re
 from django.shortcuts import redirect
 from django.conf import settings
 
+class LinkChildView(generics.CreateAPIView):
+    serializer_class = LinkChildSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ListChildrenView(generics.ListAPIView):
+    serializer_class = ChildSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        parent = self.request.user
+        if parent.role != "Parent":
+            return User.objects.none()
+        return User.objects.filter(parent_relations__parent=parent)
+    
 
 @api_view(['POST'])
 def register(request):
