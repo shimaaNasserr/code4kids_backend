@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
-    'progress',
     'cloudinary',
     'cloudinary_storage',
     'django.contrib.sites',
@@ -62,6 +61,7 @@ INSTALLED_APPS = [
     'dj_rest_auth.registration',
     'rest_framework.authtoken',
     'chatbot',
+    "progress.apps.ProgressConfig",
 
 ]
 

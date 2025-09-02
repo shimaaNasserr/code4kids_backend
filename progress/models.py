@@ -12,33 +12,38 @@ from django.core.exceptions import ValidationError
 User = get_user_model()
 
 class Progress(models.Model):
-    parent = models.ForeignKey( settings.AUTH_USER_MODEL, on_delete=models.CASCADE,related_name='children_progress', null=True, blank=True)
-    kid = models.ForeignKey( settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='course_progress')
-    course = models.ForeignKey(Course, on_delete=models.CASCADE ,related_name="progress_entries")
+    parent = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE,
+        related_name='children_progress',
+        null=True, blank=True
+    )
+    kid = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='course_progress'
+    )
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="progress_entries")
     completed_lessons = models.IntegerField(default=0) 
     completed_assignments = models.IntegerField(default=0)
     last_updated = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(default=timezone.now)
-
 
     class Meta:
         unique_together = ("kid", "course")
         ordering = ["-last_updated"]
 
     def clean(self):
-        # تأكد إن القيم مش أكبر من العدد الكلي
         if self.completed_lessons > self.course.total_lessons:
-            raise ValidationError({"completed_lessons": "number of lesson doesnt exceed total lessons"})
+            raise ValidationError({"completed_lessons": "عدد الدروس لا يمكن أن يتجاوز الدروس الكلية."})
 
         if self.completed_assignments > self.course.total_assignments:
-            raise ValidationError({"completed_assignments": "number of assignment doesnt exceed total assignments"})
+            raise ValidationError({"completed_assignments": "عدد الواجبات لا يمكن أن يتجاوز الواجبات الكلية."})
 
     def save(self, *args, **kwargs):
-        # تنظيف البيانات قبل الحفظ
         self.full_clean()
-        super().save(*args, **kwargs)    
+        super().save(*args, **kwargs)
 
-    # ✅ دلوقتي بنعتمد على الحقول المباشرة الموجودة في Course
     def total_lessons(self) -> int:
         return self.course.total_lessons
 
@@ -53,10 +58,6 @@ class Progress(models.Model):
         return round((completed_items / total_items) * 100.0, 2)
 
     def recompute(self, save=True):
-        """إعادة حساب التقدم من جداول LessonCompletion و Submission"""
-        from lessons.models import LessonCompletion
-        from assignments.models import Submission
-
         self.completed_lessons = LessonCompletion.objects.filter(
             student=self.kid,
             lesson__course=self.course
@@ -71,6 +72,16 @@ class Progress(models.Model):
             self.save()
 
     def __str__(self):
-        return (
-            f"{self.kid.username} | {self.course.title} "
-        )
+        return f"{self.kid.username} | {self.course.title} "
+
+@receiver([post_save, post_delete], sender=LessonCompletion)
+def lesson_completion_handler(sender, instance, **kwargs):
+    # Update or Recompute progress on lesson completion change
+    progress, created = Progress.objects.get_or_create(kid=instance.student, course=instance.lesson.course)
+    progress.recompute()
+
+@receiver([post_save, post_delete], sender=Submission)
+def submission_handler(sender, instance, **kwargs):
+    # Update or Recompute progress on submission change
+    progress, created = Progress.objects.get_or_create(kid=instance.student, course=instance.assignment.lesson.course)
+    progress.recompute()
