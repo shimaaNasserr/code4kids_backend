@@ -5,16 +5,19 @@ from assignments.models import Submission
 from .models import Progress
 
 
-def update_progress(kid, course):
-    progress, created = Progress.objects.get_or_create(kid=kid, course=course)
+def update_progress(student, course):
+    progress, created = Progress.objects.get_or_create(
+        kid=student,   
+        course=course
+    )
     progress.recompute()
 
 
 @receiver([post_save, post_delete], sender=LessonCompletion)
 def lesson_completion_handler(sender, instance, **kwargs):
-    update_progress(instance.kid, instance.lesson.course)
+    update_progress(instance.student, instance.lesson.course) 
 
 
 @receiver([post_save, post_delete], sender=Submission)
 def submission_handler(sender, instance, **kwargs):
-    update_progress(instance.kid, instance.assignment.lesson.course)
+    update_progress(instance.student, instance.assignment.lesson.course) 

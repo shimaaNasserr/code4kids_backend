@@ -65,7 +65,7 @@ class Progress(models.Model):
 
         self.completed_assignments = Submission.objects.filter(
             student=self.kid,
-            assignment__course=self.course
+            assignment__lesson__course=self.course
         ).count()
 
         if save:
@@ -74,14 +74,3 @@ class Progress(models.Model):
     def __str__(self):
         return f"{self.kid.username} | {self.course.title} "
 
-@receiver([post_save, post_delete], sender=LessonCompletion)
-def lesson_completion_handler(sender, instance, **kwargs):
-    # Update or Recompute progress on lesson completion change
-    progress, created = Progress.objects.get_or_create(kid=instance.student, course=instance.lesson.course)
-    progress.recompute()
-
-@receiver([post_save, post_delete], sender=Submission)
-def submission_handler(sender, instance, **kwargs):
-    # Update or Recompute progress on submission change
-    progress, created = Progress.objects.get_or_create(kid=instance.student, course=instance.assignment.lesson.course)
-    progress.recompute()
