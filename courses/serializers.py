@@ -59,3 +59,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enrollment
         fields = ['id', 'course', 'kid_name', 'enrolled_at']
+
+
+
+

@@ -24,6 +24,8 @@ urlpatterns = [
     path('api/accounts/admin/login', AdminLoginView.as_view(), name='admin-login'),
     path('api/accounts/parent/login', ParentLoginView.as_view(), name='parent-login'),
     path('api/accounts/kid/login', KidLoginView.as_view(), name='kid-login'),
+    path('api/admin/', include('courses.admin_urls')),
+
 ]
 
 
