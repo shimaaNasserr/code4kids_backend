@@ -1,5 +1,7 @@
 # accounts/serializers.py
 from rest_framework import serializers
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User, UserProfile, KidParentRelation
 from courses.models import Enrollment, Course
 from progress.models import Progress
@@ -7,9 +9,41 @@ from lessons.models import LessonCompletion
 from django.contrib.auth import get_user_model
 import re
 from rest_framework import serializers
-from .models import User  # Custom user model
+from .models import User, KidParentRelation
 
 
+class ChildSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "first_name", "last_name", "child_code"]
+
+
+class LinkChildSerializer(serializers.Serializer):
+    child_code = serializers.CharField()
+
+    def validate(self, data):
+        request = self.context['request']
+        parent = request.user
+        if parent.role != "Parent":
+            raise serializers.ValidationError("Only parents can link children.")
+
+        try:
+            child = User.objects.get(child_code=data['child_code'], role="Kid")
+        except User.DoesNotExist:
+            raise serializers.ValidationError("Invalid child code.")
+
+        if KidParentRelation.objects.filter(kid=child).exists():
+            raise serializers.ValidationError("This child is already linked to a parent.")
+
+        data['child'] = child
+        data['parent'] = parent
+        return data
+
+    def create(self, validated_data):
+        return KidParentRelation.objects.create(
+            parent=validated_data['parent'],
+            kid=validated_data['child']
+        )
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -67,6 +101,47 @@ class LoginSerializer(serializers.Serializer):
 
         data['user'] = user
         return data
+
+
+class RoleTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Token serializer that enforces a specific role at login and adds role to claims."""
+
+    # Will be provided by the view
+    required_role = None
+    require_superuser = False
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        user = self.user
+        # Enforce role match for the endpoint
+        if self.required_role and user.role != self.required_role:
+            raise AuthenticationFailed("Invalid credentials for this role.")
+
+        if self.require_superuser and not user.is_superuser:
+            raise AuthenticationFailed("Admin privileges required.")
+
+        # Build token pair
+        refresh = self.get_token(user)
+        data["refresh"] = str(refresh)
+        data["access"] = str(refresh.access_token)
+
+        # Basic user payload for convenience
+        data["user"] = {
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "role": user.role,
+        }
+        return data
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token["role"] = user.role
+        token["email"] = user.email
+        token["username"] = user.username
+        return token
     
 class UserProfileSerializer(serializers.ModelSerializer):
     age = serializers.ReadOnlyField()

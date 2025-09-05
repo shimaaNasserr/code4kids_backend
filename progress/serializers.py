@@ -15,7 +15,7 @@ class ProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Progress
         fields = [
-            "id", "kid_name","parent_name", "course_title",
+            "id", "kid_name", "parent_name", "course_title",
             "total_lessons", "completed_lessons",
             "total_assignments", "completed_assignments",
             "progress_percentage",
@@ -28,10 +28,10 @@ class ProgressSerializer(serializers.ModelSerializer):
         return obj.total_assignments()
 
     def get_completed_lessons(self, obj):
-        return obj.completed_lessons_count()
+        return obj.completed_lessons
 
     def get_completed_assignments(self, obj):
-        return obj.completed_assignments_count()
+        return obj.completed_assignments
 
     def get_progress_percentage(self, obj):
         return obj.progress_percentage()

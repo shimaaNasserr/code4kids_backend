@@ -10,16 +10,16 @@ def child_dashboard(request):
         return JsonResponse({"error": "Only kids can access this endpoint"}, status=403)
 
     progress_data = []
-    progresses = Progress.objects.filter(kid=user)  # ✅ استخدمي kid مش user (زي موديلك)
+    progresses = Progress.objects.filter(kid=user) 
 
     for p in progresses:
         progress_data.append({
             "course": p.course.title,
-            "total_lessons": p.course.lessons.count(),
-            "completed_lessons": p.completed_lessons,   # ✅ شيل .count()
-            "total_assignments": p.course.assignments.count(),
-            "completed_assignments": p.completed_assignments,  # ✅ شيل .count()
-            "progress_percentage": p.progress_percentage(),
+            "total_lessons": p.total_lessons(),  
+            "completed_lessons": p.completed_lessons,  
+            "total_assignments": p.total_assignments(),
+            "completed_assignments": p.completed_assignments, 
+            "progress_percentage": p.progress_percentage(), 
         })
 
     return JsonResponse({
@@ -39,15 +39,16 @@ def parent_dashboard(request):
     children = user.children.all()  # assuming you have a related_name='children' in Kid model
 
     for child in children:
-        child_progresses = Progress.objects.filter(kid=child)  # ✅ برضه خليها kid
+        child_progresses = Progress.objects.filter(kid=child)  
+
         progress_data = []
         for p in child_progresses:
             progress_data.append({
                 "course": p.course.title,
-                "total_lessons": p.course.lessons.count(),
-                "completed_lessons": p.completed_lessons,   # ✅
-                "total_assignments": p.course.assignments.count(),
-                "completed_assignments": p.completed_assignments,  # ✅
+                "total_lessons": p.total_lessons(), 
+                "completed_lessons": p.completed_lessons, 
+                "total_assignments": p.total_assignments(),  
+                "completed_assignments": p.completed_assignments,  
                 "progress_percentage": p.progress_percentage(),
             })
 

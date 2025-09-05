@@ -2,19 +2,36 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import User, UserProfile, KidParentRelation
-from .serializers import UserSerializer, RegisterSerializer, LoginSerializer
+from .serializers import UserSerializer, RegisterSerializer, LoginSerializer, LinkChildSerializer, ChildSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import UserProfileSerializer
 from courses.models import Enrollment, Course
 from progress.models import Progress
 from lessons.models import LessonCompletion
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg, Count
-from rest_framework import status
+from rest_framework import status, generics, permissions
 import re
 from django.shortcuts import redirect
 from django.conf import settings
+from .serializers import RoleTokenObtainPairSerializer
 
+class LinkChildView(generics.CreateAPIView):
+    serializer_class = LinkChildSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class ListChildrenView(generics.ListAPIView):
+    serializer_class = ChildSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        parent = self.request.user
+        if parent.role != "Parent":
+            return User.objects.none()
+        return User.objects.filter(parent_relations__parent=parent)
+    
 
 @api_view(['POST'])
 def register(request):
@@ -106,6 +123,35 @@ def generate_jwt_token(user):
         'refresh': str(refresh),
         'access': str(refresh.access_token),
     }
+
+
+class AdminLoginView(TokenObtainPairView):
+    serializer_class = RoleTokenObtainPairSerializer
+
+    def get_serializer_class(self):
+        # Bind required role and superuser requirement
+        class _S(RoleTokenObtainPairSerializer):
+            required_role = 'Admin'
+            require_superuser = True
+        return _S
+
+
+class ParentLoginView(TokenObtainPairView):
+    serializer_class = RoleTokenObtainPairSerializer
+
+    def get_serializer_class(self):
+        class _S(RoleTokenObtainPairSerializer):
+            required_role = 'Parent'
+        return _S
+
+
+class KidLoginView(TokenObtainPairView):
+    serializer_class = RoleTokenObtainPairSerializer
+
+    def get_serializer_class(self):
+        class _S(RoleTokenObtainPairSerializer):
+            required_role = 'Kid'
+        return _S
 
 
 @api_view(['GET'])

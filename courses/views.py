@@ -1,3 +1,6 @@
+
+# views.py 
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -11,102 +14,40 @@ from accounts.models import User
 def is_admin(user):
     return user.is_authenticated and getattr(user, 'role', '') == 'Admin'
 
-@api_view(['GET', 'POST'])
+
+
+@api_view(['GET'])
 @permission_classes([AllowAny])
 def course_list_create(request):
-    if request.method == 'GET':
-        courses = Course.objects.all()
-        serializer = CourseSerializer(courses, many=True, context={'request': request})
-        return Response(serializer.data)
-
-    elif request.method == 'POST':
-        if not is_admin(request.user):
-            return Response({'detail': 'Only Admins can create courses.'},
-                            status=status.HTTP_403_FORBIDDEN)
-
-        serializer = CourseSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(created_by=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    """Public - GET courses للكل"""
+    courses = Course.objects.all()
+    serializer = CourseSerializer(courses, many=True, context={'request': request})
+    return Response(serializer.data)
 
 
-@api_view(['GET', 'PUT', 'DELETE'])
+@api_view(['GET'])
 @permission_classes([AllowAny])
 def course_detail(request, pk):
     course = get_object_or_404(Course, pk=pk)
-
-    if request.method == 'GET':
-        serializer = CourseSerializer(course, context={'request': request})
-        return Response(serializer.data)
-
-    elif request.method == 'PUT':
-        if not is_admin(request.user):
-            return Response({'detail': 'Only Admins can update courses.'},
-                            status=status.HTTP_403_FORBIDDEN)
-
-        serializer = CourseSerializer(course, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
-        if not is_admin(request.user):
-            return Response({'detail': 'Only Admins can delete courses.'},
-                            status=status.HTTP_403_FORBIDDEN)
-
-        course.delete()
-        return Response({'detail': 'Course deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+    serializer = CourseSerializer(course, context={'request': request})
+    return Response(serializer.data)
 
 
-@api_view(['GET', 'POST'])
+@api_view(['GET'])
 @permission_classes([AllowAny])
 def instructor_list_create(request):
-    if request.method == 'GET':
-        instructors = Instructor.objects.all()
-        serializer = InstructorSerializer(instructors, many=True)
-        return Response(serializer.data)
-
-    elif request.method == 'POST':
-        if not is_admin(request.user):
-            return Response({'detail': 'Only Admins can create instructors.'},
-                            status=status.HTTP_403_FORBIDDEN)
-
-        serializer = InstructorSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    """Public - GET instructors للكل"""
+    instructors = Instructor.objects.all()
+    serializer = InstructorSerializer(instructors, many=True)
+    return Response(serializer.data)
 
 
-@api_view(['GET', 'PUT', 'DELETE'])
+@api_view(['GET'])
 @permission_classes([AllowAny])
 def instructor_detail(request, pk):
     instructor = get_object_or_404(Instructor, pk=pk)
-
-    if request.method == 'GET':
-        serializer = InstructorSerializer(instructor)
-        return Response(serializer.data)
-
-    elif request.method == 'PUT':
-        if not is_admin(request.user):
-            return Response({'detail': 'Only Admins can update instructors.'},
-                            status=status.HTTP_403_FORBIDDEN)
-
-        serializer = InstructorSerializer(instructor, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'DELETE':
-        if not is_admin(request.user):
-            return Response({'detail': 'Only Admins can delete instructors.'},
-                            status=status.HTTP_403_FORBIDDEN)
-
-        instructor.delete()
-        return Response({'detail': 'Instructor deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+    serializer = InstructorSerializer(instructor)
+    return Response(serializer.data)
 
 
 @api_view(['GET'])
@@ -122,8 +63,139 @@ def category_list(request):
 def category_courses(request, pk):
     category = get_object_or_404(Category, pk=pk)
     courses = category.courses.all()
-    serializer = CourseSerializer(courses, many=True)
+    serializer = CourseSerializer(courses, many=True, context={'request': request})
     return Response(serializer.data)
+
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def admin_course_list_create(request):
+    if not is_admin(request.user):
+        return Response({'detail': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+    
+    if request.method == 'GET':
+        courses = Course.objects.all()
+        serializer = CourseSerializer(courses, many=True, context={'request': request})
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        serializer = CourseSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save(created_by=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def admin_course_detail(request, pk):
+    if not is_admin(request.user):
+        return Response({'detail': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+    
+    course = get_object_or_404(Course, pk=pk)
+    
+    if request.method == 'GET':
+        serializer = CourseSerializer(course, context={'request': request})
+        return Response(serializer.data)
+    
+    elif request.method == 'PUT':
+        serializer = CourseSerializer(course, data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        course.delete()
+        return Response({'detail': 'Course deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def admin_instructor_list_create(request):
+    if not is_admin(request.user):
+        return Response({'detail': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+    
+    if request.method == 'GET':
+        instructors = Instructor.objects.all()
+        serializer = InstructorSerializer(instructors, many=True)
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        serializer = InstructorSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def admin_instructor_detail(request, pk):
+    if not is_admin(request.user):
+        return Response({'detail': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+    
+    instructor = get_object_or_404(Instructor, pk=pk)
+    
+    if request.method == 'GET':
+        serializer = InstructorSerializer(instructor)
+        return Response(serializer.data)
+    
+    elif request.method == 'PUT':
+        serializer = InstructorSerializer(instructor, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        instructor.delete()
+        return Response({'detail': 'Instructor deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def admin_category_list_create(request):
+    if not is_admin(request.user):
+        return Response({'detail': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+    
+    if request.method == 'GET':
+        categories = Category.objects.all()
+        serializer = CategorySerializer(categories, many=True)
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        serializer = CategorySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def admin_category_detail(request, pk):
+    if not is_admin(request.user):
+        return Response({'detail': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
+    
+    category = get_object_or_404(Category, pk=pk)
+    
+    if request.method == 'GET':
+        serializer = CategorySerializer(category)
+        return Response(serializer.data)
+    
+    elif request.method == 'PUT':
+        serializer = CategorySerializer(category, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        category.delete()
+        return Response({'detail': 'Category deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+
 
 
 @api_view(['POST'])
