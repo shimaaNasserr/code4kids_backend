@@ -1,63 +1,48 @@
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from .models import Progress
+from .serializers import ProgressSerializer
+
 
 # -------------------- CHILD DASHBOARD --------------------
-@login_required
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def child_dashboard(request):
     user = request.user
     if user.role != "Kid":
-        return JsonResponse({"error": "Only kids can access this endpoint"}, status=403)
+        return Response({"error": "Only kids can access this endpoint"}, status=403)
 
-    progress_data = []
-    progresses = Progress.objects.filter(kid=user) 
+    progresses = Progress.objects.filter(kid=user).select_related("course")
+    serializer = ProgressSerializer(progresses, many=True)
 
-    for p in progresses:
-        progress_data.append({
-            "course": p.course.title,
-            "total_lessons": p.total_lessons(),  
-            "completed_lessons": p.completed_lessons,  
-            "total_assignments": p.total_assignments(),
-            "completed_assignments": p.completed_assignments, 
-            "progress_percentage": p.progress_percentage(), 
-        })
-
-    return JsonResponse({
+    return Response({
         "child": user.username,
-        "progress": progress_data
+        "progress": serializer.data
     })
 
 
 # -------------------- PARENT DASHBOARD --------------------
-@login_required
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def parent_dashboard(request):
     user = request.user
     if user.role != "Parent":
-        return JsonResponse({"error": "Only parents can access this endpoint"}, status=403)
+        return Response({"error": "Only parents can access this endpoint"}, status=403)
 
     children_data = []
-    children = user.children.all()  # assuming you have a related_name='children' in Kid model
+    children = user.children.all()
 
     for child in children:
-        child_progresses = Progress.objects.filter(kid=child)  
-
-        progress_data = []
-        for p in child_progresses:
-            progress_data.append({
-                "course": p.course.title,
-                "total_lessons": p.total_lessons(), 
-                "completed_lessons": p.completed_lessons, 
-                "total_assignments": p.total_assignments(),  
-                "completed_assignments": p.completed_assignments,  
-                "progress_percentage": p.progress_percentage(),
-            })
+        child_progresses = Progress.objects.filter(kid=child).select_related("course")
+        serializer = ProgressSerializer(child_progresses, many=True)
 
         children_data.append({
             "child": child.username,
-            "progress": progress_data
+            "progress": serializer.data
         })
 
-    return JsonResponse({
+    return Response({
         "parent": user.username,
         "children_progress": children_data
     })

@@ -1,23 +1,40 @@
+# progress/serializers.py
 from rest_framework import serializers
 from .models import Progress
 from courses.models import Course
 
+
+class CourseMiniSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = ["id", "title", "description", "level", "image_url"]
+
+    def get_image_url(self, obj):
+        if obj.image:
+            try:
+                return obj.image.url  # CloudinaryField بيرجع URL مباشر كده
+            except:
+                return None
+        return None
+
+
 class ProgressSerializer(serializers.ModelSerializer):
     total_lessons = serializers.SerializerMethodField()
     total_assignments = serializers.SerializerMethodField()
-    completed_lessons = serializers.SerializerMethodField()
-    completed_assignments = serializers.SerializerMethodField()
     progress_percentage = serializers.SerializerMethodField()
-    course_title = serializers.CharField(source='course.title', read_only=True)
-    kid_name = serializers.CharField(source='kid.username', read_only=True)
-    parent_name = serializers.CharField(source='parent.username', read_only=True)
+    course = CourseMiniSerializer(read_only=True)
 
     class Meta:
         model = Progress
         fields = [
-            "id", "kid_name", "parent_name", "course_title",
-            "total_lessons", "completed_lessons",
-            "total_assignments", "completed_assignments",
+            "id",
+            "course",
+            "total_lessons",
+            "completed_lessons",
+            "total_assignments",
+            "completed_assignments",
             "progress_percentage",
         ]
 
@@ -26,12 +43,6 @@ class ProgressSerializer(serializers.ModelSerializer):
 
     def get_total_assignments(self, obj):
         return obj.total_assignments()
-
-    def get_completed_lessons(self, obj):
-        return obj.completed_lessons
-
-    def get_completed_assignments(self, obj):
-        return obj.completed_assignments
 
     def get_progress_percentage(self, obj):
         return obj.progress_percentage()
