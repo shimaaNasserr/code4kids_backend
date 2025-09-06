@@ -25,6 +25,7 @@ class InstructorSerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True) 
     image_url = serializers.SerializerMethodField()
+    image = serializers.ImageField(write_only=True, required=False)
     instructors = InstructorSerializer(many=True, read_only=True)
     instructor_ids = serializers.PrimaryKeyRelatedField(
         many=True, 
@@ -44,7 +45,7 @@ class CourseSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Course
-        fields = ['id', 'title', 'description', 'level', 'image_url', 'created_at', 'created_by', 
+        fields = ['id', 'title', 'description', 'level', 'image_url', 'image', 'created_at', 'created_by', 
                  'categories', 'category_ids', 'instructors', 'instructor_ids', 'instructors_names']
         read_only_fields = ['created_by', 'created_at'] 
 
