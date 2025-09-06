@@ -12,7 +12,7 @@ urlpatterns = [
     path('api/', include('lessons.urls')),
     path('api/', include('ratings.urls')),
     path('api/', include('games.urls')),
-    path('progress/', include('progress.urls')),
+    path('api/progress/', include('progress.urls')),
     path('upload/', upload_media, name='upload_media'),
     path('dj-rest-auth/', include('dj_rest_auth.urls')),
     path('dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
