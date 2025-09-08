@@ -30,8 +30,8 @@ class LinkChildSerializer(serializers.Serializer):
         except User.DoesNotExist:
             raise serializers.ValidationError("Invalid child code.")
 
-        if KidParentRelation.objects.filter(kid=child).exists():
-            raise serializers.ValidationError("This child is already linked to a parent.")
+        if KidParentRelation.objects.filter(parent=parent, kid=child).exists():
+            raise serializers.ValidationError("You already linked this child.")
 
         data['child'] = child
         data['parent'] = parent
@@ -42,12 +42,6 @@ class LinkChildSerializer(serializers.Serializer):
             parent=validated_data['parent'],
             kid=validated_data['child']
         )
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'email', 'role', 'phone_number', 'first_name', 'last_name']
-
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -134,7 +128,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
-            'role', 'phone_number', 'profile'
+            'role', 'phone_number','child_code', 'profile'
         ]
         extra_kwargs = {
             'email': {'read_only': True}
@@ -277,7 +271,7 @@ class ComprehensiveProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
-            'role', 'phone_number', 'profile', 'enrolled_courses',
+            'role', 'phone_number', 'child_code','profile', 'enrolled_courses',
             'recent_completions', 'children'
         ]
     
