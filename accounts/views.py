@@ -2,11 +2,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import User, UserProfile, KidParentRelation
-from .serializers import UserSerializer, RegisterSerializer, LoginSerializer, LinkChildSerializer, ChildSerializer
+from .serializers import UserSerializer, RegisterSerializer, LoginSerializer, LinkChildSerializer, ChildSerializer, KidSummarySerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import UserProfileSerializer
 from courses.models import Enrollment, Course
+from rest_framework.views import APIView
 from progress.models import Progress
 from lessons.models import LessonCompletion
 from django.shortcuts import get_object_or_404
@@ -21,16 +22,44 @@ class LinkChildView(generics.CreateAPIView):
     serializer_class = LinkChildSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_serializer_context(self):
+        return {"request": self.request}
 
-class ListChildrenView(generics.ListAPIView):
-    serializer_class = ChildSerializer
+class MyChildrenView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    def get(self, request):
+        if request.user.role != "Parent":
+            return Response({"error": "Only parents can view children."}, status=403)
+
+        relations = KidParentRelation.objects.filter(parent=request.user)
+        serializer = KidSummarySerializer(relations, many=True)
+        return Response(serializer.data)
+    
+class ListChildrenView(generics.ListAPIView):
+    serializer_class = KidSummarySerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        child_code = request.data.get("child_code")
+
+        try:
+            child = User.objects.get(child_code=child_code, role="Kid")
+        except User.DoesNotExist:
+            return Response({"error": "Invalid child code"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if KidParentRelation.objects.filter(parent=request.user, kid=child).exists():
+            return Response({"error": "Child already linked"}, status=status.HTTP_400_BAD_REQUEST)
+
+        KidParentRelation.objects.create(parent=request.user, kid=child)
+
+        return Response({"message": "Child linked successfully"}, status=status.HTTP_201_CREATED)
+    
     def get_queryset(self):
         parent = self.request.user
         if parent.role != "Parent":
-            return User.objects.none()
-        return User.objects.filter(parent_relations__parent=parent)
+            return KidParentRelation.objects.none()
+        return KidParentRelation.objects.filter(parent=parent)
     
 
 @api_view(['POST'])
@@ -53,7 +82,8 @@ def register(request):
 
     serializer = RegisterSerializer(data=data)
     if serializer.is_valid():
-        user = serializer.save()
+        user = serializer.save(first_name=data['username'],  
+            last_name='')
 
         if user.role == 'Admin':
             user.is_staff = True
@@ -217,10 +247,11 @@ def profile_dashboard(request):
         'user_info': {
             'id': user.id,
             'username': user.username,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
+            'first_name': user.first_name if user.first_name else user.username,
+            'last_name': user.last_name if user.last_name else '',
             'email': user.email,
             'role': user.role,
+            'child_code': getattr(user, 'child_code', None)
         },
         'profile_info': {
             'avatar': user.profile.avatar.url if user.profile.avatar else None,
