@@ -29,4 +29,5 @@ staticfiles/
 media/
 
 # Logs
-*.log
+*.log__pycache__/
+*.pyc
