@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     register, loginUser, parent_only_view, kid_only_view, admin_only_view, 
     get_full_user_profile, update_user_profile, add_points,
-    profile_dashboard, upload_avatar, course_progress_detail, achievements, LinkChildView, ListChildrenView
+    profile_dashboard, upload_avatar, course_progress_detail, achievements, LinkChildView,MyChildrenView ,ListChildrenView
 )
 
 urlpatterns = [
@@ -29,6 +29,5 @@ urlpatterns = [
     path('profile/achievements/', achievements, name='achievements'),
 
     path("link-child/", LinkChildView.as_view(), name="link-child"),
-    path("my-children/", ListChildrenView.as_view(), name="my-children"),
-
+    path("my-children/", MyChildrenView.as_view(), name="my-children"),
 ]
