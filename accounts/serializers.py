@@ -1,7 +1,5 @@
 # accounts/serializers.py
 from rest_framework import serializers
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import User, UserProfile, KidParentRelation
 from courses.models import Enrollment, Course
 from progress.models import Progress
@@ -10,6 +8,22 @@ from django.contrib.auth import get_user_model
 import re
 from rest_framework import serializers
 from .models import User, KidParentRelation
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+class RoleTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Custom JWT serializer that includes the user's role in the token response.
+    """
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['role'] = user.role
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data['role'] = self.user.role
+        return data
 
 
 class ChildSerializer(serializers.ModelSerializer):
@@ -19,7 +33,7 @@ class ChildSerializer(serializers.ModelSerializer):
 
 
 class LinkChildSerializer(serializers.Serializer):
-    child_code = serializers.CharField()
+    child_code = serializers.CharField(write_only=True)
 
     def validate(self, data):
         request = self.context['request']
@@ -40,10 +54,14 @@ class LinkChildSerializer(serializers.Serializer):
         return data
 
     def create(self, validated_data):
-        return KidParentRelation.objects.create(
-            parent=validated_data['parent'],
-            kid=validated_data['child']
+        parent = validated_data['parent']
+        child = validated_data['child']
+
+        relation, _ = KidParentRelation.objects.get_or_create(
+            parent=parent,
+            kid=child
         )
+        return relation
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -62,11 +80,17 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"password": "Password must be 6–11 characters long, and may include @#$%^&* only."}
             )
+        
+        email = data.get('email', '').strip()
+        if User.objects.filter(email__iexact=email).exists():
+            raise serializers.ValidationError({"email": "This email is already registered with another account."})
+
         return data
 
     def create(self, validated_data):
         validated_data.pop('confirm_password')  
         password = validated_data.pop('password')
+        validated_data['email'] = validated_data['email'].strip().lower()
         user = User(**validated_data)
         user.set_password(password)
         user.save()
@@ -83,7 +107,7 @@ class LoginSerializer(serializers.Serializer):
 
         User = get_user_model()
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(email__iexact=email)
         except User.DoesNotExist:
             raise serializers.ValidationError("Invalid email or password")
 
@@ -92,50 +116,12 @@ class LoginSerializer(serializers.Serializer):
 
         if not user.is_active:
             raise serializers.ValidationError("User is inactive")
+       
+        if 'role' in self.context and user.role != self.context['role']:
+            raise serializers.ValidationError("Invalid role for this login.")
 
         data['user'] = user
         return data
-
-
-class RoleTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """Token serializer that enforces a specific role at login and adds role to claims."""
-
-    # Will be provided by the view
-    required_role = None
-    require_superuser = False
-
-    def validate(self, attrs):
-        data = super().validate(attrs)
-
-        user = self.user
-        # Enforce role match for the endpoint
-        if self.required_role and user.role != self.required_role:
-            raise AuthenticationFailed("Invalid credentials for this role.")
-
-        if self.require_superuser and not user.is_superuser:
-            raise AuthenticationFailed("Admin privileges required.")
-
-        # Build token pair
-        refresh = self.get_token(user)
-        data["refresh"] = str(refresh)
-        data["access"] = str(refresh.access_token)
-
-        # Basic user payload for convenience
-        data["user"] = {
-            "id": user.id,
-            "email": user.email,
-            "username": user.username,
-            "role": user.role,
-        }
-        return data
-
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token["role"] = user.role
-        token["email"] = user.email
-        token["username"] = user.username
-        return token
     
 class UserProfileSerializer(serializers.ModelSerializer):
     age = serializers.ReadOnlyField()
@@ -252,36 +238,64 @@ class EnrollmentSummarySerializer(serializers.ModelSerializer):
         ).count()
 
 class KidSummarySerializer(serializers.ModelSerializer):
-    
     kid_name = serializers.SerializerMethodField()
     total_courses = serializers.SerializerMethodField()
     total_completed_lessons = serializers.SerializerMethodField()
     kid_points = serializers.SerializerMethodField()
     kid_avatar = serializers.SerializerMethodField()
-    
+    child_code = serializers.SerializerMethodField()
+    kid_email = serializers.SerializerMethodField()
+
     class Meta:
         model = KidParentRelation
         fields = [
-            'kid', 'kid_name', 'total_courses', 
-            'total_completed_lessons', 'kid_points', 'kid_avatar'
+            'kid', 'kid_name', 'child_code', 'kid_email',
+            'total_courses', 'total_completed_lessons',
+            'kid_points', 'kid_avatar'
         ]
-    
+
     def get_kid_name(self, obj):
         return f"{obj.kid.first_name} {obj.kid.last_name}".strip() or obj.kid.username
-    
+
+    def get_child_code(self, obj):
+        return obj.kid.child_code
+
+    def get_kid_email(self, obj):
+        return obj.kid.email
+
     def get_total_courses(self, obj):
         return Enrollment.objects.filter(kid=obj.kid, is_active=True).count()
-    
+
     def get_total_completed_lessons(self, obj):
         return LessonCompletion.objects.filter(student=obj.kid).count()
-    
+
     def get_kid_points(self, obj):
         return obj.kid.profile.points
-    
+
     def get_kid_avatar(self, obj):
         if obj.kid.profile.avatar:
             return obj.kid.profile.avatar.url
         return None
+    
+class KidDashboardSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer(read_only=True)
+    enrolled_courses = serializers.SerializerMethodField()
+    recent_completions = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'first_name', 'last_name', 'email',
+            'child_code', 'profile', 'enrolled_courses', 'recent_completions'
+        ]
+
+    def get_enrolled_courses(self, obj):
+        enrollments = Enrollment.objects.filter(kid=obj, is_active=True)
+        return EnrollmentSummarySerializer(enrollments, many=True).data
+
+    def get_recent_completions(self, obj):
+        completions = LessonCompletion.objects.filter(student=obj).order_by('-completed_at')[:5]
+        return LessonCompletionStatsSerializer(completions, many=True).data
 
 class AchievementSerializer(serializers.Serializer):
     
