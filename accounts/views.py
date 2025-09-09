@@ -2,7 +2,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import User, UserProfile, KidParentRelation
-from .serializers import UserSerializer, RegisterSerializer, LoginSerializer, LinkChildSerializer, ChildSerializer, KidSummarySerializer
+
+from .serializers import UserSerializer, RegisterSerializer, LoginSerializer, LinkChildSerializer, ChildSerializer, KidSummarySerializer, KidDashboardSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import UserProfileSerializer
@@ -24,6 +25,28 @@ class LinkChildView(generics.CreateAPIView):
 
     def get_serializer_context(self):
         return {"request": self.request}
+
+    def create(self, request, *args, **kwargs):
+        if request.user.role != "Parent":
+            return Response({"error": "Only parents can link children."}, status=403)
+
+        child_code = request.data.get("child_code")
+        if not child_code:
+            return Response({"error": "child_code is required."}, status=400)
+
+        try:
+            child = User.objects.get(child_code=child_code, role="Kid")
+        except User.DoesNotExist:
+            return Response({"error": "Invalid child code."}, status=400)
+
+        # Check if already linked
+        if KidParentRelation.objects.filter(parent=request.user, kid=child).exists():
+            return Response({"error": "Child already linked."}, status=400)
+
+        # Link the child
+        KidParentRelation.objects.create(parent=request.user, kid=child)
+        return Response({"message": f"Child {child.username} linked successfully."}, status=201)
+
 
 class MyChildrenView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -61,6 +84,23 @@ class ListChildrenView(generics.ListAPIView):
             return KidParentRelation.objects.none()
         return KidParentRelation.objects.filter(parent=parent)
     
+        relations = KidParentRelation.objects.filter(parent=request.user).select_related("kid")
+        children_data = KidDashboardSerializer([r.kid for r in relations], many=True).data
+        return Response(children_data, status=200)
+
+        for relation in relations:
+            kid = relation.kid
+            children_data.append({
+                "id": kid.id,
+                "username": kid.username,
+                "first_name": kid.first_name,
+                "last_name": kid.last_name,
+                "email": kid.email,
+                "child_code": kid.child_code,
+                "points": kid.profile.points if hasattr(kid, "profile") else 0,
+            })
+
+        return Response(children_data, status=200)
 
 @api_view(['POST'])
 def register(request):

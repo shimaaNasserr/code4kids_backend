@@ -234,13 +234,41 @@ def admin_statistics(request):
     total_kids = User.objects.filter(role='Kid').count()
     total_courses = Course.objects.count()
     total_lessons = Lesson.objects.count()
-    
+
+    try:
+        top_courses = (
+            Course.objects.annotate(
+                completions_count=Count("lessons__completions", distinct=True),
+                views_count=Count("lessons__lessonview", distinct=True),
+            )
+            .order_by("-completions_count")[:5]
+            .values("title", "completions_count", "views_count")
+        )
+    except Exception as e:
+        print("⚠️ Error in top_courses:", e)
+        top_courses = []
+
+    # Top Kids (بناءً على completed_lessons related_name)
+    try:
+        top_kids = (
+            User.objects.filter(role="Kid")
+            .annotate(completed_lessons_count=Count("completed_lessons", distinct=True))
+            .order_by("-completed_lessons_count")[:5]
+            .values("username", "completed_lessons_count")
+        )
+    except Exception as e:
+        print("⚠️ Error in top_kids:", e)
+        top_kids = []
+
+
     statistics = {
         "total_users": total_users,
         "total_parents": total_parents,
         "total_kids": total_kids,
         "total_courses": total_courses,
-        "total_lessons": total_lessons
+        "total_lessons": total_lessons,
+        "top_courses": list(top_courses),
+        "top_kids": list(top_kids),
     }
     
     return Response(statistics)
