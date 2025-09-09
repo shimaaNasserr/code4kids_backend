@@ -45,7 +45,6 @@ class LinkChildView(generics.CreateAPIView):
 
 
 class MyChildrenView(APIView):
-
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -69,8 +68,6 @@ class MyChildrenView(APIView):
             })
 
         return Response(children_data, status=200)
-  
-
 
 @api_view(['POST'])
 def register(request):
