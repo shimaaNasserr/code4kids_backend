@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Progress
+from accounts.models import KidParentRelation
 from .serializers import ProgressSerializer
 
 
@@ -26,23 +27,46 @@ def child_dashboard(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def parent_dashboard(request):
-    user = request.user
-    if user.role != "Parent":
-        return Response({"error": "Only parents can access this endpoint"}, status=403)
+    parent = request.user
+
+    # علاقات الأب والأطفال
+    relations = KidParentRelation.objects.filter(parent=parent).select_related("kid")
 
     children_data = []
-    children = user.children.all()
 
-    for child in children:
-        child_progresses = Progress.objects.filter(kid=child).select_related("course")
-        serializer = ProgressSerializer(child_progresses, many=True)
+    for relation in relations:
+        kid = relation.kid
+        progresses = Progress.objects.filter(kid=kid).select_related("course")
+
+        total_courses = progresses.count()
+        in_progress = 0
+        completed = 0
+
+        for p in progresses:
+            p.recompute(save=False)
+            pct = p.progress_percentage()
+            if pct >= 100:
+                completed += 1
+            elif pct > 0:
+                in_progress += 1
 
         children_data.append({
-            "child": child.username,
-            "progress": serializer.data
+            "id": kid.id,
+            "name": f"{kid.first_name} {kid.last_name}".strip() or kid.username,
+            "avatar": kid.profile.avatar.url if kid.profile and kid.profile.avatar else None,
+            "stats": {
+                "total_courses": total_courses,
+                "in_progress": in_progress,
+                "completed": completed,
+            },
+            "progress": ProgressSerializer(progresses, many=True).data
         })
 
     return Response({
-        "parent": user.username,
-        "children_progress": children_data
+        "parent": {
+            "id": parent.id,
+            "username": parent.username,
+            "email": parent.email,
+        },
+        "children": children_data,
     })
