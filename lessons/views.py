@@ -223,7 +223,6 @@ def admin_lesson_detail(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def admin_statistics(request):
-    """Admin endpoint for getting platform statistics"""
     if not is_admin(request.user):
         return Response(
             {"error": "Only administrators can access this endpoint"}, 
