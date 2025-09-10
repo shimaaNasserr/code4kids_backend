@@ -9,6 +9,8 @@ from .serializers import LessonSerializer
 import cloudinary.uploader
 from accounts.models import User
 from courses.models import Course
+from django.utils import timezone
+from datetime import timedelta
 
 def is_admin(user):
     """Checks if the user is an Admin"""
@@ -271,4 +273,13 @@ def admin_statistics(request):
         "top_kids": list(top_kids),
     }
     
+    five_days_ago = timezone.now() - timedelta(days=5)
+    active_kids = User.objects.filter(
+        role='Kid',
+        last_login__gte=five_days_ago
+    ).count()
+
+    statistics["active_kids_last_5_days"] = active_kids
+
     return Response(statistics)
+    
