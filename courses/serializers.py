@@ -3,9 +3,16 @@ from .models import Course, Category ,Enrollment, Instructor
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+    
     class Meta:
         model = Category
-        fields = ['id', 'name', 'description']
+        fields = ['id', 'name', 'description','image']
+
+    def get_image(self, obj):
+        if obj.image:
+            return obj.image.url  
+        return None
 
 class InstructorSerializer(serializers.ModelSerializer):
     profile_image = serializers.SerializerMethodField()
